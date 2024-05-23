@@ -46,7 +46,7 @@ class TextSystem(object):
 
         # 2. TextRecognizer
         rec_res = self.text_recognizer.run(img_crop_list)
-        
+        # print(rec_res)
         # 3. Filter
         filter_boxes, filter_rec_res = [], []
         for box, rec_result in zip(dt_boxes, rec_res):
@@ -119,7 +119,8 @@ def init_args():
     parser = argparse.ArgumentParser(description='PPOCR-System Python Demo')
     # basic params
     parser.add_argument('--det_model_path', type=str, required= True, help='model path, could be .onnx or .rknn file')
-    parser.add_argument('--rec_model_path', type=str, required= True, help='model path, could be .onnx or .rknn file')
+    parser.add_argument('--rec_model_path1', type=str, required= True, help='model path, could be .onnx or .rknn file')
+    parser.add_argument('--rec_model_path2', type=str, required= True, help='model path, could be .onnx or .rknn file')
     parser.add_argument('--target', type=str, default='rk3566', help='target RKNPU platform')
     parser.add_argument('--device_id', type=str, default=None, help='device id')
     # parser.add_argument('--vis_font_path', type=str, default='../model/simfang.ttf', help='vis font path')
@@ -138,5 +139,6 @@ if __name__ == '__main__':
 
     # Inference
     filter_boxes, filter_rec_res = system_model.run(img)
+    # system_model.run(img)
 
     print(filter_rec_res)

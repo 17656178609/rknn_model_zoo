@@ -49,7 +49,7 @@ POSTPROCESS_CONFIG = {
         }
 class TextRecognizer:
     def __init__(self, args) -> None:
-        self.model, self.framework = setup_model(args)
+        self.model1, self.model2, self.framework = setup_model(args)
         self.preprocess_funct = []
         for item in PRE_PROCESS_CONFIG:
             for key in item:
@@ -75,23 +75,27 @@ class TextRecognizer:
         for img in imgs:
             img = cv2.resize(img, (REC_INPUT_SHAPE[1], REC_INPUT_SHAPE[0]))
             model_input = self.preprocess({'image':img})
-            output = self.model.run([model_input['image']])
+            output = self.model1.run([model_input['image']])
+            output = self.model2.run([output[0]])
             preds = output[0].astype(np.float32)
             output = self.ctc_postprocess(preds)
             outputs.append(output)
         return outputs
 
 def setup_model(args):
-    model_path = args.rec_model_path
-    if model_path.endswith('.rknn'):
+    model_path1 = args.rec_model_path1
+    model_path2 = args.rec_model_path2
+    if model_path1.endswith('.rknn'):
         platform = 'rknn'
         from py_utils.rknn_executor import RKNN_model_container 
-        model = RKNN_model_container(model_path, args.target, args.device_id)
-    elif model_path.endswith('onnx'):
+        model1 = RKNN_model_container(model_path1, args.target, args.device_id)
+        model2 = RKNN_model_container(model_path2, args.target, args.device_id)
+    elif model_path1.endswith('onnx'):
         platform = 'onnx'
         from py_utils.onnx_executor import ONNX_model_container
-        model = ONNX_model_container(model_path)
+        model1 = ONNX_model_container(model_path1)
+        model2 = ONNX_model_container(model_path2)
     else:
-        assert False, "{} is not rknn/onnx model".format(model_path)
-    print('Model-{} is {} model, starting val'.format(model_path, platform))
-    return model, platform
+        assert False, "{} is not rknn/onnx model".format(model_path1)
+    print('Model-{} is {} model, starting val'.format(model_path1, platform))
+    return model1, model2, platform

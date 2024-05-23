@@ -14,9 +14,10 @@
 import sys
 from rknn.api import RKNN
 
-DEFAULT_RKNN_PATH = '../model/ppocrv4_rec.rknn'
+DEFAULT_RKNN_PATH = '../model/ppocrv4_rec_part1.rknn'
 DEFAULT_QUANT = False
 RKNPU1_PLATFORM = ['rk1808', 'rv1109', 'rv1126']
+DATASET_PATH = '../../../../datasets/PPOCR/imgs/dataset_20.txt'
 
 def parse_arg():
     if len(sys.argv) < 3:
@@ -73,7 +74,7 @@ if __name__ == '__main__':
 
     # Build model
     print('--> Building model')
-    ret = rknn.build(do_quantization=do_quant)
+    ret = rknn.build(do_quantization=do_quant, dataset=DATASET_PATH)
     if ret != 0:
         print('Build model failed!')
         exit(ret)
