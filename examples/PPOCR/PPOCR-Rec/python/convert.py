@@ -15,7 +15,7 @@ import sys
 from rknn.api import RKNN
 
 DEFAULT_RKNN_PATH = '../model/ppocrv4_rec_part1.rknn'
-DEFAULT_QUANT = False
+DEFAULT_QUANT = True
 RKNPU1_PLATFORM = ['rk1808', 'rv1109', 'rv1126']
 DATASET_PATH = '../../../../datasets/PPOCR/imgs/dataset_20.txt'
 
@@ -53,7 +53,7 @@ if __name__ == '__main__':
     # Pre-process config
     print('--> Config model')
     if platform in RKNPU1_PLATFORM:
-        rknn.config(target_platform=platform)
+        rknn.config(mean_values=[[0, 0, 0]], std_values=[[255, 255, 255]], target_platform=platform)
     else:
         rknn.config(
             target_platform=platform,
@@ -63,7 +63,8 @@ if __name__ == '__main__':
         )
 
     print('done')
-
+# 'std': [1, 1, 1],
+#                 'mean': [0, 0, 0],
     # Load model
     print('--> Loading model')
     ret = rknn.load_onnx(model=model_path)

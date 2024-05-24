@@ -19,6 +19,9 @@ import numpy as np
 import utils.operators
 from utils.rec_postprocess import CTCLabelDecode
 
+
+
+
 # add path
 realpath = os.path.abspath(__file__)
 _sep = os.path.sep
@@ -47,6 +50,59 @@ POSTPROCESS_CONFIG = {
             "use_space_char": True
             }   
         }
+
+
+
+def dumpTensor(value, dtype, filePath):
+    f = open(filePath, 'w')
+    if dtype in ["int", "int32"]:
+        np.savetxt(f, np.array(value).flatten(), fmt='%i')
+    else:
+        np.savetxt(f, np.array(value).flatten())
+    f.close()
+
+def readTensor(filePath, dtype, shape):
+    if dtype in ["int", "int32"]:
+        return np.loadtxt(filePath, dtype=np.int32).reshape(shape)
+    else:
+        return np.loadtxt(filePath, dtype=np.float32).reshape(shape)
+
+def dumpResult(feed_dict, output_dict, outputDir):
+    # save Info
+    jsonDict = {}
+    jsonDict['inputs'] = []
+    jsonDict['outputs'] = []
+    for idx, inputName in enumerate(feed_dict.keys()):
+        shape = inputInfos[idx][0]
+        dtype = inputInfos[idx][1]
+        inp = {}
+        inp['name'] = inputName
+        inp['shape'] = shape
+        inp['dtype'] = dtype
+        jsonDict['inputs'].append(inp)
+    
+    for idx, outputName in enumerate(output_dict.keys()):
+        shape = outputInfos[idx][0]
+        dtype = outputInfos[idx][1]
+        outp = {}
+        outp['name'] = outputName
+        outp['shape'] = shape
+        outp['dtype'] = dtype
+        jsonDict['outputs'].append(outp)
+    # save input, output info
+    jsonString = json.dumps(jsonDict, indent=4)
+    print("save input / output info")
+    with open('{}/input.json'.format(outputDir), 'w') as f:
+        f.write(jsonString)
+    # dump output
+    print("save output:")
+    for idx, (outputName, value) in enumerate(output_dict.items()):
+        dtype = outputInfos[idx][1]
+        print(outputName)
+        filename = outputName.replace('/', '.')
+        name = '{}/'.format(outputDir) + filename + '_rknn.txt'
+        dumpTensor(value, dtype, name)
+    return
 class TextRecognizer:
     def __init__(self, args) -> None:
         self.model1, self.model2, self.framework = setup_model(args)
@@ -75,7 +131,16 @@ class TextRecognizer:
         for img in imgs:
             img = cv2.resize(img, (REC_INPUT_SHAPE[1], REC_INPUT_SHAPE[0]))
             model_input = self.preprocess({'image':img})
+            # 将image的数据类型转换为np.int16
+            # model_input['image'] = model_input['image'].astype(np.int16)
+            # print("model_input dtype: ", model_input['image'].dtype)
+
+
             output = self.model1.run([model_input['image']])
+            # output1 = []
+            # output = np.array(output).astype(np.int16)
+            # output1.append(output)
+            # print("output dtype: ", output[0].dtype)
             output = self.model2.run([output[0]])
             preds = output[0].astype(np.float32)
             output = self.ctc_postprocess(preds)
